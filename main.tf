@@ -19,6 +19,11 @@ resource "aws_iam_role_policy" "main" {
   policy = "${data.aws_iam_policy_document.this.json}"
 }
 
+resource "aws_iam_role_policy_attachment" "codebuild_ecr" {
+  role       = "${module.codebuild_role.role_name}"
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+}
+
 # Security Group Name
 module "postgres_sg_name" {
   source        = "github.com/traveloka/terraform-aws-resource-naming.git?ref=v0.18.1"
