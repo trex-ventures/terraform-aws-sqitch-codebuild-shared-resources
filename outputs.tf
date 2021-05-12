@@ -14,6 +14,6 @@ output "codebuild_security_group_id" {
 }
 
 output "codebuild_role_name" {
-  value = "${module.codebuild_role.role_name}"
+  value       = "${module.codebuild_role.role_name}"
   description = "The sqitch codebuild role's Name. Useful for attaching additional policies through aws_iam_role_policy_attachment"
 }
