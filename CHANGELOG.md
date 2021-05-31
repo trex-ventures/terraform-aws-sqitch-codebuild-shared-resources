@@ -1,33 +1,19 @@
-## v0.2.0 (Feb 28, 2019)
+## v1.0.0 (May 31, 2021)
 
 NOTES:
-* Any Notes regarding your submitted PR, like breaking changes or else.
+
+* Might not be compatible with Terraform 11
 
 FEATURES:
 
-* **New Source:** `aws_000_0000` ([#references_to_issue](./))
+* Terraform 12 syntax
+
+## v0.3.0 (May 12, 2021)
 
 ENHANCEMENTS:
 
-* feature: Add support for new version of AWS API
-
-BUG FIXES:
-
-* Prevent error from evil bugs
+* Output Codebuild role name since some terraform module requires the name instead of ARN
 
 ## v0.1.0 (Jan 1, 2019)
 
-NOTES:
-* Any Notes regarding your submitted PR, like breaking changes or else.
-
-FEATURES:
-
-* **New Source:** `aws_000_0000` ([#references_to_issue](./))
-
-ENHANCEMENTS:
-
-* feature: Add support for new version of AWS API
-
-BUG FIXES:
-
-* Prevent error from evil bugs
+* Initial release
