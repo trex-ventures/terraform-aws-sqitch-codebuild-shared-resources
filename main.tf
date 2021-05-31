@@ -1,6 +1,6 @@
 # Codebuild Role
 module "codebuild_role" {
-  source         = "github.com/traveloka/terraform-aws-iam-role.git//modules/service?ref=v1.0.2"
+  source         = "github.com/traveloka/terraform-aws-iam-role.git//modules/service?ref=v2.0.2"
   product_domain = "${var.product_domain}"
   environment    = "${var.environment}"
 
@@ -26,13 +26,13 @@ resource "aws_iam_role_policy_attachment" "codebuild_ecr" {
 
 # Security Group Name
 module "postgres_sg_name" {
-  source        = "github.com/traveloka/terraform-aws-resource-naming.git?ref=v0.18.1"
+  source        = "github.com/traveloka/terraform-aws-resource-naming.git?ref=v0.19.1"
   name_prefix   = "${var.product_domain}-postgres-sqitch-sg"
   resource_type = "security_group" 
 } 
 
 module "codebuild_sg_name" {
-  source        = "github.com/traveloka/terraform-aws-resource-naming.git?ref=v0.18.1"
+  source        = "github.com/traveloka/terraform-aws-resource-naming.git?ref=v0.19.1"
   name_prefix   = "${var.product_domain}-codebuild-sqitch-sg"
   resource_type = "security_group" 
 }
