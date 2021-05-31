@@ -14,6 +14,6 @@ ENHANCEMENTS:
 
 * Output Codebuild role name since some terraform module requires the name instead of ARN
 
-## v0.1.0 (Jan 1, 2019)
+## v0.1.0 (Oct 8, 2020)
 
 * Initial release
