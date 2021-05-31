@@ -15,13 +15,21 @@ module "codebuild_role" {
 # Codebuild role IAM policy
 resource "aws_iam_role_policy" "main" {
   name   = "${module.codebuild_role.role_name}-main"
-  role   = "${module.codebuild_role.role_name}"
-  policy = "${data.aws_iam_policy_document.this.json}"
+  role   = module.codebuild_role.role_name
+  policy = data.aws_iam_policy_document.this.json
 }
 
 resource "aws_iam_role_policy_attachment" "codebuild_ecr" {
-  role       = "${module.codebuild_role.role_name}"
+  role       = module.codebuild_role.role_name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+}
+
+resource "aws_iam_role_policy" "allow_use_cmk" {
+  count = (length(var.key_arns) > 0) ? 1 : 0
+
+  name   = "${module.codebuild_role.role_name}-allow-use-cmk"
+  role   = module.codebuild_role.role_name
+  policy = data.aws_iam_policy_document.allow_cmk.json
 }
 
 # Security Group Name
@@ -39,27 +47,27 @@ module "codebuild_sg_name" {
 
 # Security Group
 resource "aws_security_group" "codebuild_sqitch" {
-  name        = "${module.codebuild_sg_name.name}"
-  vpc_id      = "${var.vpc_id}"
+  name        = module.codebuild_sg_name.name
+  vpc_id      = var.vpc_id
   description = "${var.product_domain}-codebuild-sqitch security group"
 
   tags = {
-    Name          = "${module.codebuild_sg_name.name}"
+    Name          = module.codebuild_sg_name.name
     Service       = "${var.product_domain}-codebuild-sqitch"
-    ProductDomain = "${var.product_domain}"
-    Environment   = "${var.environment}"
+    ProductDomain = var.product_domain
+    Environment   = var.environment
     Description   = "Security group for ${var.product_domain}-codebuild-sqitch pipeline"
     ManagedBy     = "terraform"
   }
 }
 
 resource "aws_security_group" "postgres_sqitch" {
-  name        = "${module.postgres_sg_name.name}"
-  vpc_id      = "${var.vpc_id}"
+  name        = module.postgres_sg_name.name
+  vpc_id      = var.vpc_id
   description = "${var.product_domain}-postgres-sqitch security group to be attached to RDS instances"
 
   tags = {
-    Name          = "${module.postgres_sg_name.name}"
+    Name          = module.postgres_sg_name.name
     Service       = "${var.product_domain}-postgres-sqitch"
     ProductDomain = "${var.product_domain}"
     Environment   = "${var.environment}"
@@ -74,7 +82,7 @@ resource "aws_security_group_rule" "codebuild_sqitch_https_all" {
   from_port         = "443"
   to_port           = "443"
   protocol          = "tcp"
-  security_group_id = "${aws_security_group.codebuild_sqitch.id}"
+  security_group_id = aws_security_group.codebuild_sqitch.id
   cidr_blocks       = ["0.0.0.0/0"]
   description       = "Egress from ${var.product_domain}-codebuild-sqitch to all in 443"
 }
@@ -84,8 +92,8 @@ resource "aws_security_group_rule" "egress_from_codebuild_sqitch_to_postgres_543
   from_port                = "5432"
   to_port                  = "5432"
   protocol                 = "tcp"
-  security_group_id        = "${aws_security_group.codebuild_sqitch.id}"
-  source_security_group_id = "${aws_security_group.postgres_sqitch.id}"
+  security_group_id        = aws_security_group.codebuild_sqitch.id
+  source_security_group_id = aws_security_group.postgres_sqitch.id
   description              = "Egress from ${var.product_domain}-codebuild-sqitch to ${var.product_domain}-postgres-sqitch in 5432"
 }
 
@@ -94,8 +102,8 @@ resource "aws_security_group_rule" "ingress_for_postgres_from_codebuild_sqitch_5
   from_port                = "5432"
   to_port                  = "5432"
   protocol                 = "tcp"
-  security_group_id        = "${aws_security_group.postgres_sqitch.id}"
-  source_security_group_id = "${aws_security_group.codebuild_sqitch.id}"
+  security_group_id        = aws_security_group.postgres_sqitch.id
+  source_security_group_id = aws_security_group.codebuild_sqitch.id
   description              = "ingress for ${var.product_domain}-postgres-sqitch from ${var.product_domain}-codebuild-sqitch in 5432"
 }
 

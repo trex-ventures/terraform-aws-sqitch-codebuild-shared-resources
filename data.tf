@@ -78,3 +78,15 @@ data "aws_iam_policy_document" "this" {
     }
   }
 }
+
+data "aws_iam_policy_document" "allow_cmk" {
+  statement {
+    effect = "Allow"
+    
+    actions = [
+      "kms:Decrypt"
+    ]
+    
+    resources = "${var.key_arns}"
+  }
+}

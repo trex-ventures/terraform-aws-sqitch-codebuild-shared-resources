@@ -42,13 +42,13 @@ Go to the `example` directory for example terraform code that uses this module.
 
 We use [SemVer](https://semver.org/) for our versioning
 
-**Latest stable version** `v1.0.0`, 31st May 2021
+**Latest stable version** `v1.1.0`, 2nd June 2021
 
-**Latest version** `v0.1.2`, 31st May 2021
+**Latest version** `v1.1.0`, 2nd June 2021
 
 **Latest release** :
 
-- Terraform 12 Syntax
+- Allow usage of Customer Managed Keys for SecureString encryption & decryption
 
 Please also see our `CHANGELOG` document in this repository and see more detail
 
