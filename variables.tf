@@ -1,6 +1,12 @@
-variable "product_domain" {
+variable "product" {
   type        = string
   description = "product domain of the role owner"
+}
+
+variable "service_name" {
+  type        = string
+  description = "name of the service"
+  default     = "sqitch"
 }
 
 variable "vpc_id" {
@@ -14,13 +20,13 @@ variable "environment" {
 }
 
 variable "additional_tags" {
-  type        = map
+  type        = map(string)
   description = "additional tags for the shared resources"
   default     = {}
 }
 
 variable "key_arns" {
-  type        = list
+  type        = list(string)
   description = "List of all AWS KMS Customer Managed Key ARNs that this role can use"
   default     = []
 }

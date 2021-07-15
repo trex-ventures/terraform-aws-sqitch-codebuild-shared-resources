@@ -1,78 +1,85 @@
 # Codebuild Role
+resource "random_id" "codebuild_role" {
+  prefix = format("%s-%s-", var.product, var.service_name)
+  keepers = {
+    product = var.product
+  }
+
+  byte_length = 8
+}
+
 module "codebuild_role" {
-  source         = "github.com/traveloka/terraform-aws-iam-role.git//modules/service?ref=v2.0.2"
-  product_domain = "${var.product_domain}"
-  environment    = "${var.environment}"
+  source  = "terraform-aws-modules/iam/aws//modules/iam-assumable-role"
+  version = "~> 4.0"
 
-  role_identifier            = "${var.product_domain}-codebuild-sqitch-role"
-  role_description           = "Service Role for CodeBuild Sqitch pipeline"
-  role_force_detach_policies = "true"
-  role_tags                  = "${var.additional_tags}"
-
-  aws_service = "codebuild.amazonaws.com"
+  create_role           = true
+  force_detach_policies = true
+  role_name             = random_id.codebuild_role.hex
+  role_path             = "/service/codebuild/"
+  role_requires_mfa     = false
+  role_description      = "Service Role for CodeBuild Sqitch pipeline"
+  trusted_role_services = [
+    "codebuild.amazonaws.com"
+  ]
 }
 
 # Codebuild role IAM policy
 resource "aws_iam_role_policy" "main" {
-  name   = "${module.codebuild_role.role_name}-main"
-  role   = module.codebuild_role.role_name
+  name   = "${module.codebuild_role.iam_role_name}-main"
+  role   = module.codebuild_role.iam_role_name
   policy = data.aws_iam_policy_document.this.json
 }
 
 resource "aws_iam_role_policy_attachment" "codebuild_ecr" {
-  role       = module.codebuild_role.role_name
+  role       = module.codebuild_role.iam_role_name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 
 resource "aws_iam_role_policy" "allow_use_cmk" {
   count = (length(var.key_arns) > 0) ? 1 : 0
 
-  name   = "${module.codebuild_role.role_name}-allow-use-cmk"
-  role   = module.codebuild_role.role_name
+  name   = "${module.codebuild_role.iam_role_name}-allow-use-cmk"
+  role   = module.codebuild_role.iam_role_name
   policy = data.aws_iam_policy_document.allow_cmk.json
 }
 
 # Security Group Name
-module "postgres_sg_name" {
-  source        = "github.com/traveloka/terraform-aws-resource-naming.git?ref=v0.19.1"
-  name_prefix   = "${var.product_domain}-postgres-sqitch-sg"
-  resource_type = "security_group" 
-} 
+resource "random_id" "codebuild_sg" {
+  prefix = format("%s-%s-", var.product, var.service_name)
+  keepers = {
+    product = var.product
+  }
 
-module "codebuild_sg_name" {
-  source        = "github.com/traveloka/terraform-aws-resource-naming.git?ref=v0.19.1"
-  name_prefix   = "${var.product_domain}-codebuild-sqitch-sg"
-  resource_type = "security_group" 
+  byte_length = 8
+}
+
+resource "random_id" "postgres_sg" {
+  prefix = format("%s-%s-", var.product, var.service_name)
+  keepers = {
+    product = var.product
+  }
+
+  byte_length = 8
 }
 
 # Security Group
 resource "aws_security_group" "codebuild_sqitch" {
-  name        = module.codebuild_sg_name.name
+  name        = random_id.codebuild_sg.hex
   vpc_id      = var.vpc_id
-  description = "${var.product_domain}-codebuild-sqitch security group"
+  description = "${var.product}-codebuild-sqitch security group"
 
   tags = {
-    Name          = module.codebuild_sg_name.name
-    Service       = "${var.product_domain}-codebuild-sqitch"
-    ProductDomain = var.product_domain
-    Environment   = var.environment
-    Description   = "Security group for ${var.product_domain}-codebuild-sqitch pipeline"
-    ManagedBy     = "terraform"
+    Description = "Security group for ${var.product}-codebuild-sqitch pipeline"
   }
 }
 
 resource "aws_security_group" "postgres_sqitch" {
-  name        = module.postgres_sg_name.name
+  name        = random_id.postgres_sg.hex
   vpc_id      = var.vpc_id
-  description = "${var.product_domain}-postgres-sqitch security group to be attached to RDS instances"
+  description = "${var.product}-postgres-sqitch security group to be attached to RDS instances"
 
   tags = {
-    Name          = module.postgres_sg_name.name
-    Service       = "${var.product_domain}-postgres-sqitch"
-    ProductDomain = "${var.product_domain}"
-    Environment   = "${var.environment}"
-    Description   = "Security group for ${var.product_domain}-postgres-sqitch to be attached to RDS instances"
-    ManagedBy     = "terraform"
+    Description = "Security group for ${var.product}-postgres-sqitch to be attached to RDS instances"
   }
 }
 
@@ -84,7 +91,7 @@ resource "aws_security_group_rule" "codebuild_sqitch_https_all" {
   protocol          = "tcp"
   security_group_id = aws_security_group.codebuild_sqitch.id
   cidr_blocks       = ["0.0.0.0/0"]
-  description       = "Egress from ${var.product_domain}-codebuild-sqitch to all in 443"
+  description       = "Egress from ${var.product}-codebuild-sqitch to all in 443"
 }
 
 resource "aws_security_group_rule" "egress_from_codebuild_sqitch_to_postgres_5432" {
@@ -94,7 +101,7 @@ resource "aws_security_group_rule" "egress_from_codebuild_sqitch_to_postgres_543
   protocol                 = "tcp"
   security_group_id        = aws_security_group.codebuild_sqitch.id
   source_security_group_id = aws_security_group.postgres_sqitch.id
-  description              = "Egress from ${var.product_domain}-codebuild-sqitch to ${var.product_domain}-postgres-sqitch in 5432"
+  description              = "Egress from ${var.product}-codebuild-sqitch to ${var.product}-postgres-sqitch in 5432"
 }
 
 resource "aws_security_group_rule" "ingress_for_postgres_from_codebuild_sqitch_5432" {
@@ -104,6 +111,6 @@ resource "aws_security_group_rule" "ingress_for_postgres_from_codebuild_sqitch_5
   protocol                 = "tcp"
   security_group_id        = aws_security_group.postgres_sqitch.id
   source_security_group_id = aws_security_group.codebuild_sqitch.id
-  description              = "ingress for ${var.product_domain}-postgres-sqitch from ${var.product_domain}-codebuild-sqitch in 5432"
+  description              = "ingress for ${var.product}-postgres-sqitch from ${var.product}-codebuild-sqitch in 5432"
 }
 

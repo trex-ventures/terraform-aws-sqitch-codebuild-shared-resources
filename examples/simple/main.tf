@@ -1,6 +1,6 @@
 module "codebuild_sqitch_shared_resources" {
-  source         = "../../"
-  product_domain = "bei"
-  environment    = "staging"
-  vpc_id         = "${data.terraform_remote_state.vpc_lab_production.outputs.vpc_id}"
+  source      = "../../"
+  product     = "lending"
+  environment = "stg"
+  vpc_id      = data.aws_vpc.this.id
 }
